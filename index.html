@@ -5,7 +5,6 @@
   <title>PDF → 이미지 변환</title>
 
   <!-- 기본 SEO -->
-  <title>PDF 이미지 변환기 | PDF를 페이지별 이미지로 무료 변환</title>
   <meta name="description" content="PDF 파일을 업로드하면 페이지별 이미지(PNG)로 변환해주는 무료 웹 도구입니다. 서버 업로드 없이 브라우저에서 안전하게 처리됩니다." />
   <meta name="keywords" content="PDF 이미지 변환, PDF to Image, PDF PNG 변환, PDF 페이지별 이미지, PDF 변환기, PDF 이미지 추출" />
   <meta name="author" content="PDF to Image Converter" />
@@ -14,7 +13,7 @@
   <!-- 모바일 최적화 -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Open Graph (카카오톡, 페이스북, 슬랙 등) -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="PDF 이미지 변환기 | 페이지별 PNG 변환" />
   <meta property="og:description" content="PDF를 업로드하면 페이지별 이미지로 즉시 변환합니다. 서버 업로드 없이 안전하게 처리됩니다." />
@@ -64,7 +63,7 @@
     html, body {
       margin: 0;
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg-main);
       color: var(--text-main);
     }
@@ -88,6 +87,23 @@
     header h1 {
       font-size: 18px;
       margin: 0;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-select {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
     }
 
     /* 🔥 버튼 공통 스타일 */
@@ -207,16 +223,24 @@
 <div class="app">
 
   <header>
-    <h1>🌱 PDF → 이미지 변환</h1>
-    <!-- 🔥 초기화 버튼도 동일 스타일 -->
-    <button id="resetBtn" class="btn">초기화</button>
+    <h1 data-i18n="header_title">🌱 PDF → 이미지 변환</h1>
+    <div class="header-controls">
+      <select id="langSelect" class="lang-select">
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+        <option value="ja">日本語</option>
+        <option value="es">Español</option>
+      </select>
+      <button id="resetBtn" class="btn" data-i18n="reset">초기화</button>
+    </div>
   </header>
 
   <main>
     <div id="dropZone" class="drop-zone">
       <div class="empty">
-        <h2>PDF 파일을 드래그 & 드롭</h2>
-        <p>또는 클릭해서 선택</p>
+        <h2 data-i18n="drop_title">PDF 파일을 드래그 & 드롭</h2>
+        <p data-i18n="drop_desc">또는 클릭해서 선택</p>
         <div id="status"></div>
       </div>
       <input id="fileInput" type="file" accept="application/pdf">
@@ -228,12 +252,12 @@
   </main>
 
   <footer id="footer" style="display:none;">
-    <div class="notice">
+    <div class="notice" data-i18n="notice">
       업로드된 PDF 파일은 사용자 브라우저에서만 처리되며 서버로 전송·저장되지 않습니다.<br>
       파일의 저작권 및 사용 책임은 업로드한 사용자에게 있습니다.
     </div>
     <!-- 🔥 전체 다운로드 버튼 -->
-    <button id="downloadAll" class="btn">📦 전체 ZIP 다운로드</button>
+    <button id="downloadAll" class="btn" data-i18n="download_all">📦 전체 ZIP 다운로드</button>
   </footer>
 
 </div>
@@ -254,9 +278,136 @@ const footer = document.getElementById("footer");
 const status = document.getElementById("status");
 const resetBtn = document.getElementById("resetBtn");
 const downloadAllBtn = document.getElementById("downloadAll");
+const langSelect = document.getElementById("langSelect");
 
 let images = [];
 let fileBaseName = "";
+let currentLang = "ko";
+
+const translations = {
+  ko: {
+    header_title: "🌱 PDF → 이미지 변환",
+    reset: "초기화",
+    drop_title: "PDF 파일을 드래그 & 드롭",
+    drop_desc: "또는 클릭해서 선택",
+    notice: "업로드된 PDF 파일은 사용자 브라우저에서만 처리되며 서버로 전송·저장되지 않습니다.<br>파일의 저작권 및 사용 책임은 업로드한 사용자에게 있습니다.",
+    download_all: "📦 전체 ZIP 다운로드",
+    status_loading: "⏳ PDF 로딩 중...",
+    status_converting: "📄 {current} / {total} 변환 중",
+    status_done: "✅ 변환 완료",
+    alert_pdf_only: "PDF만 업로드 가능합니다.",
+    alert_size_limit: "50MB 이하 PDF만 지원합니다.",
+    alert_page_limit: "페이지 수 {max} 초과",
+    page_download: "페이지 {page} 다운로드",
+    page_title: "PDF 이미지 변환기"
+  },
+  en: {
+    header_title: "🌱 PDF → Image Converter",
+    reset: "Reset",
+    drop_title: "Drag & Drop PDF File",
+    drop_desc: "Or click to select",
+    notice: "Uploaded PDF files are processed only in your browser and are not sent to or stored on the server.<br>The user is responsible for copyright and usage.",
+    download_all: "📦 Download All as ZIP",
+    status_loading: "⏳ Loading PDF...",
+    status_converting: "📄 Converting {current} / {total}",
+    status_done: "✅ Conversion Complete",
+    alert_pdf_only: "Only PDF files are allowed.",
+    alert_size_limit: "Only PDFs under 50MB are supported.",
+    alert_page_limit: "Page count exceeds {max}",
+    page_download: "Download Page {page}",
+    page_title: "PDF to Image Converter"
+  },
+  zh: {
+    header_title: "🌱 PDF → 图像转换器",
+    reset: "重置",
+    drop_title: "拖放 PDF 文件",
+    drop_desc: "或点击选择",
+    notice: "上传的 PDF 文件仅在您的浏览器中处理，不会发送或存储在服务器上。<br>用户需对版权和使用负责。",
+    download_all: "📦 下载所有 ZIP",
+    status_loading: "⏳ 正在加载 PDF...",
+    status_converting: "📄 正在转换 {current} / {total}",
+    status_done: "✅ 转换完成",
+    alert_pdf_only: "仅支持 PDF 文件。",
+    alert_size_limit: "仅支持 50MB 以下的 PDF。",
+    alert_page_limit: "页数超过 {max}",
+    page_download: "下载第 {page} 页",
+    page_title: "PDF转图片工具"
+  },
+  ja: {
+    header_title: "🌱 PDF → 画像変換",
+    reset: "リセット",
+    drop_title: "PDFファイルをドラッグ＆ドロップ",
+    drop_desc: "またはクリックして選択",
+    notice: "アップロードされたPDFファイルはブラウザ内でのみ処理され、サーバーに送信・保存されることはありません。<br>著作権および使用責任はユーザーにあります。",
+    download_all: "📦 ZIPで一括ダウンロード",
+    status_loading: "⏳ PDF読み込み中...",
+    status_converting: "📄 変換中 {current} / {total}",
+    status_done: "✅ 変換完了",
+    alert_pdf_only: "PDFファイルのみアップロード可能です。",
+    alert_size_limit: "50MB以下のPDFのみ対応しています。",
+    alert_page_limit: "ページ数が {max} を超えています",
+    page_download: "ページ {page} をダウンロード",
+    page_title: "PDF画像変換ツール"
+  },
+  es: {
+    header_title: "🌱 PDF → Imagen",
+    reset: "Reiniciar",
+    drop_title: "Arrastra y suelta el archivo PDF",
+    drop_desc: "O haz clic para seleccionar",
+    notice: "Los archivos PDF subidos se procesan solo en su navegador y no se envían ni almacenan en el servidor.<br>El usuario es responsable de los derechos de autor y el uso.",
+    download_all: "📦 Descargar todo en ZIP",
+    status_loading: "⏳ Cargando PDF...",
+    status_converting: "📄 Convirtiendo {current} / {total}",
+    status_done: "✅ Conversión completada",
+    alert_pdf_only: "Solo se permiten archivos PDF.",
+    alert_size_limit: "Solo se admiten PDF de menos de 50MB.",
+    alert_page_limit: "El número de páginas excede {max}",
+    page_download: "Descargar página {page}",
+    page_title: "Convertidor de PDF a Imagen"
+  }
+};
+
+function t(key, params = {}) {
+  let text = translations[currentLang][key] || key;
+  for (const [k, v] of Object.entries(params)) {
+    text = text.replace(`{${k}}`, v);
+  }
+  return text;
+}
+
+function updateDOM() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const params = el.getAttribute('data-i18n-params');
+    const p = params ? JSON.parse(params) : {};
+    el.innerHTML = t(key, p);
+  });
+  document.title = t('page_title');
+  document.documentElement.lang = currentLang;
+}
+
+function setStatus(key, params = {}) {
+  status.setAttribute('data-i18n', key);
+  if (Object.keys(params).length > 0) {
+    status.setAttribute('data-i18n-params', JSON.stringify(params));
+  } else {
+    status.removeAttribute('data-i18n-params');
+  }
+  status.textContent = t(key, params);
+}
+
+langSelect.onchange = (e) => {
+  currentLang = e.target.value;
+  updateDOM();
+};
+
+// Detect browser language
+const browserLang = navigator.language.slice(0, 2);
+if (translations[browserLang]) {
+  currentLang = browserLang;
+  langSelect.value = currentLang;
+}
+updateDOM();
 
 dropZone.onclick = () => fileInput.click();
 
@@ -285,6 +436,7 @@ function reset() {
   images = [];
   list.innerHTML = "";
   status.textContent = "";
+  status.removeAttribute('data-i18n');
   center.style.display = "none";
   footer.style.display = "none";
   dropZone.style.display = "flex";
@@ -292,8 +444,8 @@ function reset() {
 }
 
 async function handlePDF(file) {
-  if (file.type !== "application/pdf") return alert("PDF만 업로드 가능합니다.");
-  if (file.size > MAX_FILE_SIZE) return alert("50MB 이하 PDF만 지원합니다.");
+  if (file.type !== "application/pdf") return alert(t('alert_pdf_only'));
+  if (file.size > MAX_FILE_SIZE) return alert(t('alert_size_limit'));
 
   fileBaseName = file.name.replace(/\.pdf$/i, "");
   images = [];
@@ -302,20 +454,21 @@ async function handlePDF(file) {
   dropZone.style.display = "none";
   center.style.display = "flex";
   footer.style.display = "flex";
-  status.textContent = "⏳ PDF 로딩 중...";
+
+  setStatus('status_loading');
 
   const pdf = await pdfjsLib.getDocument({
     data: await file.arrayBuffer()
   }).promise;
 
   if (pdf.numPages > MAX_PAGES) {
-    alert(`페이지 수 ${MAX_PAGES} 초과`);
+    alert(t('alert_page_limit', {max: MAX_PAGES}));
     reset();
     return;
   }
 
   for (let i = 1; i <= pdf.numPages; i++) {
-    status.textContent = `📄 ${i} / ${pdf.numPages} 변환 중`;
+    setStatus('status_converting', {current: i, total: pdf.numPages});
 
     const page = await pdf.getPage(i);
     const viewport = page.getViewport({ scale: SCALE });
@@ -334,7 +487,7 @@ async function handlePDF(file) {
     createCard(i, url);
   }
 
-  status.textContent = "✅ 변환 완료";
+  setStatus('status_done');
 }
 
 function createCard(page, url) {
@@ -345,7 +498,9 @@ function createCard(page, url) {
   img.src = url;
 
   const label = document.createElement("span");
-  label.textContent = `페이지 ${page} 다운로드`;
+  label.setAttribute('data-i18n', 'page_download');
+  label.setAttribute('data-i18n-params', JSON.stringify({page: page}));
+  label.textContent = t('page_download', {page});
 
   card.appendChild(img);
   card.appendChild(label);
