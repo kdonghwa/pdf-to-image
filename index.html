@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PDF → 이미지 변환</title>
+  <title>PDF → Image Converter</title>
 
   <!-- 기본 SEO -->
   <meta name="description" content="PDF 파일을 업로드하면 페이지별 이미지(PNG)로 변환해주는 무료 웹 도구입니다. 서버 업로드 없이 브라우저에서 안전하게 처리됩니다." />
@@ -223,24 +223,24 @@
 <div class="app">
 
   <header>
-    <h1 data-i18n="header_title">🌱 PDF → 이미지 변환</h1>
+    <h1 data-i18n="header_title">🌱 PDF → Image Converter</h1>
     <div class="header-controls">
       <select id="langSelect" class="lang-select">
-        <option value="ko">한국어</option>
         <option value="en">English</option>
+        <option value="ko">한국어</option>
         <option value="zh">中文</option>
         <option value="ja">日本語</option>
         <option value="es">Español</option>
       </select>
-      <button id="resetBtn" class="btn" data-i18n="reset">초기화</button>
+      <button id="resetBtn" class="btn" data-i18n="reset">Reset</button>
     </div>
   </header>
 
   <main>
     <div id="dropZone" class="drop-zone">
       <div class="empty">
-        <h2 data-i18n="drop_title">PDF 파일을 드래그 & 드롭</h2>
-        <p data-i18n="drop_desc">또는 클릭해서 선택</p>
+        <h2 data-i18n="drop_title">Drag & Drop PDF File</h2>
+        <p data-i18n="drop_desc">Or click to select</p>
         <div id="status"></div>
       </div>
       <input id="fileInput" type="file" accept="application/pdf">
@@ -253,11 +253,10 @@
 
   <footer id="footer" style="display:none;">
     <div class="notice" data-i18n="notice">
-      업로드된 PDF 파일은 사용자 브라우저에서만 처리되며 서버로 전송·저장되지 않습니다.<br>
-      파일의 저작권 및 사용 책임은 업로드한 사용자에게 있습니다.
+      Uploaded PDF files are processed only in your browser and are not sent to or stored on the server.<br>The user is responsible for copyright and usage.
     </div>
     <!-- 🔥 전체 다운로드 버튼 -->
-    <button id="downloadAll" class="btn" data-i18n="download_all">📦 전체 ZIP 다운로드</button>
+    <button id="downloadAll" class="btn" data-i18n="download_all">📦 Download All as ZIP</button>
   </footer>
 
 </div>
@@ -282,7 +281,7 @@ const langSelect = document.getElementById("langSelect");
 
 let images = [];
 let fileBaseName = "";
-let currentLang = "ko";
+let currentLang = "en";
 
 const translations = {
   ko: {
@@ -406,6 +405,10 @@ const browserLang = navigator.language.slice(0, 2);
 if (translations[browserLang]) {
   currentLang = browserLang;
   langSelect.value = currentLang;
+} else {
+  // Fallback to English if browser language is not supported
+  currentLang = "en";
+  langSelect.value = "en";
 }
 updateDOM();
 
